@@ -1,118 +1,76 @@
 #!/system/bin/sh
-set -e
+# FCM Hosts Systemless Hosts - Installer (CTO Refined)
 
-# 使用 $MODPATH 环境变量（KSU 安装器传入），如果不存在则从脚本路径推导
+# 强制获取 MODPATH (兼容 KSU/Magisk)
 if [ -z "$MODPATH" ]; then
-    # 解析脚本真实路径（跟随软链接）
-    SCRIPT_PATH="$(cd "$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")" && pwd)"
-    MODPATH="${SCRIPT_PATH%/*}"
+    MODPATH="/data/adb/modules/fcm-hosts-optimizer"
 fi
 
+# 定义唯一工作区
 WORKSPACE="/data/adb/fcm-hosts"
+BIN_DIR="$WORKSPACE/bin"
+REAL_SCRIPT="$BIN_DIR/fcm-update"
+REAL_HOSTS="$WORKSPACE/hosts"
 
-ui_print "========================================"
-ui_print "FCM Hosts Optimizer - 安装程序 v1.0"
-ui_print "========================================"
-ui_print ""
-ui_print "   MODPATH: $MODPATH"
+ui_print "--------------------------------------"
+ui_print "    FCM Hosts Optimizer (Symlink Mode)"
+ui_print "--------------------------------------"
 
-# [1] 环境准备
-ui_print "[1/5] 准备安装环境..."
-mkdir -p "$WORKSPACE"
-if [ $? -ne 0 ]; then
-    ui_print "[错误] 无法创建工作目录: $WORKSPACE"
-    exit 1
-fi
-ui_print "   OK: 工作目录 $WORKSPACE"
-ui_print ""
+# [1] 清理旧环境 (防止幽灵文件)
+ui_print "- 清理旧环境..."
+rm -rf "$WORKSPACE/fcm-update" # 删除旧版本遗留的错误文件
+mkdir -p "$BIN_DIR"
 
-# [2] 部署 fcm-update 脚本 (从模块目录)
-ui_print "[2/5] 部署 fcm-update 脚本..."
-
+# [2] 部署核心脚本 (物理移动，由模块 -> 数据分区)
+ui_print "- 部署核心脚本..."
 if [ -f "$MODPATH/bin/fcm-update" ]; then
-    cp "$MODPATH/bin/fcm-update" "$WORKSPACE/fcm-update"
-    chmod 755 "$WORKSPACE/fcm-update"
-    ui_print "   OK: 脚本已部署到 $WORKSPACE/fcm-update"
+    cp -f "$MODPATH/bin/fcm-update" "$REAL_SCRIPT"
+    chmod 755 "$REAL_SCRIPT"
+    # 删除模块内的源文件，确保无冗余
+    rm -rf "$MODPATH/bin"
 else
-    ui_print "[错误] 未找到 $MODPATH/bin/fcm-update"
-    exit 1
-fi
-ui_print ""
-
-# [3] 基底初始化
-ui_print "[3/5] 初始化 hosts 文件..."
-
-if [ ! -f "$WORKSPACE/hosts" ]; then
-    ui_print "   首次安装，复制系统 hosts..."
-    if ! cat /system/etc/hosts > "$WORKSPACE/hosts" 2>/dev/null; then
-        ui_print "[错误] 无法读取系统 hosts"
-        exit 1
-    fi
-    ui_print "   OK: 已复制系统 hosts"
-
-    # SELinux
-    if [ -x "$(command -v chcon)" ]; then
-        chcon --reference /system/etc/hosts "$WORKSPACE/hosts" 2>/dev/null || true
-        ui_print "   OK: SELinux 上下文已设置"
-    fi
-else
-    ui_print "   已有 hosts，跳过初始化"
-fi
-ui_print ""
-
-# [4] 建立软链
-ui_print "[4/5] 建立系统软链..."
-
-mkdir -p "$MODPATH/system/etc" 2>/dev/null
-if [ $? -ne 0 ]; then
-    ui_print "[错误] 无法创建 $MODPATH/system/etc"
+    ui_print "错误: 安装包损坏，未找到 bin/fcm-update"
     exit 1
 fi
 
-# hosts 软链
-rm -f "$MODPATH/system/etc/hosts" 2>/dev/null
-ln -sf "$WORKSPACE/hosts" "$MODPATH/system/etc/hosts"
-if [ $? -ne 0 ]; then
-    ui_print "[错误] hosts 软链创建失败"
-    exit 1
-fi
-ui_print "   OK: /system/etc/hosts -> $WORKSPACE/hosts"
-
-# fcm-update 软链 (模块目录已经是软链接)
-if [ -L "$MODPATH/system/bin/fcm-update" ]; then
-    TARGET=$(readlink "$MODPATH/system/bin/fcm-update")
-    ui_print "   OK: system/bin/fcm-update -> $TARGET"
-else
-    ui_print "[警告] fcm-update 不是符号链接"
-fi
-ui_print ""
-
-# [5] 设置 service.sh 权限
-ui_print "[5/5] 设置权限..."
-
-if [ -f "$MODPATH/service.sh" ]; then
-    chmod 755 "$MODPATH/service.sh"
-    ui_print "   OK: service.sh 已设置可执行"
-else
-    ui_print "[警告] 未找到 service.sh"
+# [3] 初始化 Hosts 数据 (如果不存在)
+ui_print "- 初始化数据文件..."
+if [ ! -f "$REAL_HOSTS" ]; then
+    ui_print "  生成初始 hosts..."
+    # 必须包含 localhost，否则系统会崩
+    echo "127.0.0.1 localhost" > "$REAL_HOSTS"
+    echo "::1 localhost ip6-localhost" >> "$REAL_HOSTS"
+    # 尝试复制系统原版内容作为保底
+    grep -v "localhost" /system/etc/hosts >> "$REAL_HOSTS" 2>/dev/null || true
 fi
 
-# 验证
-ui_print ""
-ui_print "[验证] 安装状态"
-if [ -L "$MODPATH/system/etc/hosts" ]; then
-    ui_print "   OK: hosts 软链正常"
-else
-    ui_print "[警告] hosts 软链可能异常"
+# [4] 关键：SELinux 上下文伪造
+# 必须让 /data 下的文件拥有 system_file 的上下文，否则软链过去系统也读不到
+if [ -x "$(command -v chcon)" ]; then
+    ui_print "  应用 SELinux 伪装..."
+    chcon --reference /system/etc/hosts "$REAL_HOSTS" 2>/dev/null || true
+    chcon --reference /system/etc/hosts "$REAL_SCRIPT" 2>/dev/null || true
 fi
 
-if [ -f "$WORKSPACE/fcm-update" ]; then
-    ui_print "   OK: fcm-update 脚本存在"
-else
-    ui_print "[警告] fcm-update 脚本不存在"
-fi
+# [5] 构建模块内的系统镜像 (全是软链接)
+ui_print "- 构建系统挂载点..."
 
-ui_print ""
-ui_print "========================================"
-ui_print "安装完成！请重启手机"
-ui_print "========================================"
+# 5.1 注入 /system/bin/fcm-update
+mkdir -p "$MODPATH/system/bin"
+rm -f "$MODPATH/system/bin/fcm-update"
+ln -sf "$REAL_SCRIPT" "$MODPATH/system/bin/fcm-update"
+
+# 5.2 注入 /system/etc/hosts (核心偷天换日)
+mkdir -p "$MODPATH/system/etc"
+rm -rf "$MODPATH/system/etc/hosts" # 强制删除，防止是文件夹
+ln -sf "$REAL_HOSTS" "$MODPATH/system/etc/hosts"
+
+# [6] 权限修正
+set_perm_recursive "$MODPATH" 0 0 0755 0644
+set_perm "$MODPATH/service.sh" 0 0 0755
+
+ui_print "--------------------------------------"
+ui_print "安装完成"
+ui_print "   Hosts 路径: $REAL_HOSTS"
+ui_print "   命令已注册: fcm-update"
+ui_print "请重启手机以加载内核挂载"

@@ -1,29 +1,26 @@
 #!/system/bin/sh
-set -e
+# 开机自启与定时任务守护
 
-WORKSPACE="/data/adb/fcm-hosts"
-UPDATE_SCRIPT="$WORKSPACE/bin/fcm-update"
+# 核心脚本的唯一绝对路径
+UPDATE_CMD="/data/adb/fcm-hosts/bin/fcm-update"
 
-# 创建 bin 目录
-mkdir -p "$WORKSPACE/bin"
+# 1. 等待网络 (最长等待 60s)
+wait_count=0
+while ! ping -c 1 -W 1 223.5.5.5 >/dev/null 2>&1; do
+    sleep 2
+    wait_count=$((wait_count + 1))
+    if [ $wait_count -ge 30 ]; then break; fi
+done
 
-# 复制更新脚本到 workspace
-if [ -f "/data/adb/modules/fcm-hosts-optimizer/system/bin/fcm-update" ]; then
-    cp /data/adb/modules/fcm-hosts-optimizer/system/bin/fcm-update "$UPDATE_SCRIPT"
-    chmod 755 "$UPDATE_SCRIPT"
+# 2. 开机立即执行一次更新 (静默)
+if [ -x "$UPDATE_CMD" ]; then
+    nohup "$UPDATE_CMD" >/dev/null 2>&1 &
 fi
 
-# 等待网络就绪
-sleep 60
-
-# 首次更新
-"$UPDATE_SCRIPT" || true
-
-# 定时更新循环 (3小时一次)
+# 3. 定时更新 (每小时)
 while true; do
-    # 检查网络连通性
-    if curl -sf --connect-timeout 10 https://google.com > /dev/null 2>&1; then
-        "$UPDATE_SCRIPT" || true
+    sleep 3600
+    if [ -x "$UPDATE_CMD" ]; then
+        "$UPDATE_CMD" >/dev/null 2>&1
     fi
-    sleep 10800  # 3小时
 done
