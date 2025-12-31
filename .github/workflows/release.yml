@@ -36,12 +36,9 @@ jobs:
           zip -r fcm-hosts-ksu-${BASE_VER}.zip .
 
       - name: Create Git Tag
-        uses: actions/create-tag@v1
-        with:
-          tag: ${{ env.BASE_VER }}
-          message: 'Release ${{ env.BASE_VER }}'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git tag ${{ env.BASE_VER }}
+          git push origin ${{ env.BASE_VER }}
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
