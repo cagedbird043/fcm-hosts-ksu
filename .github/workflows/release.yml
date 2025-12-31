@@ -39,7 +39,12 @@ jobs:
         run: |
           echo "BASE_VER: ${{ env.BASE_VER }}"
           echo "ZIP_NAME: ${{ env.ZIP_NAME }}"
-          zip -r "${{ env.ZIP_NAME }}" .
+          zip -r "${{ env.ZIP_NAME }}" . \
+            -x "*.git*" \
+            ".github/*" \
+            "CHANGELOG.md" \
+            "*.md" \
+            "*.txt"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
