@@ -1,7 +1,0 @@
-id=fcm-hosts-optimizer
-name=FCM Hosts Optimizer
-version=v1.0.0
-versionCode=${V_CODE}
-author=cagedbird043
-description=Systemless hosts via symlink strategy. Auto-syncs with cloud IP pool.
-updateJson=https://miceworld.top/fcm-hosts-ksu/update.json

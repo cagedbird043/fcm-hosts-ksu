@@ -1,0 +1,87 @@
+#!/system/bin/sh
+
+REMOTE_URL="https://miceworld.top/fcm-hosts-next/fcm_dual.hosts"
+LOCAL_TARGET="/data/adb/fcm-hosts/hosts"
+TMP_FILE="/data/adb/fcm-hosts/hosts.tmp"
+TIMESTAMP=$(date +%s)
+
+echo "[FCM] ========================================"
+echo "[FCM] FCM Hosts Updater - $(date '+%Y-%m-%d %H:%M:%S')"
+echo "[FCM] ========================================"
+
+# [1] 检查网络
+echo "[FCM] [1/5] 检查网络..."
+if ! curl -sf --connect-timeout 10 https://google.com > /dev/null 2>&1; then
+    echo "[FCM] [错误] 网络不可用"
+    exit 1
+fi
+echo "[FCM] OK: 网络正常"
+
+# [2] 下载
+echo "[FCM] [2/5] 下载远程 hosts..."
+DOWNLOAD_URL="${REMOTE_URL}?t=${TIMESTAMP}"
+echo "[FCM] URL: $DOWNLOAD_URL"
+
+if ! curl -kfsSL --connect-timeout 10 --max-time 60 "$DOWNLOAD_URL" -o "$TMP_FILE.download" 2>/dev/null; then
+    echo "[FCM] [错误] 下载失败"
+    rm -f "$TMP_FILE.download"
+    exit 1
+fi
+
+FILE_SIZE=$(wc -c < "$TMP_FILE.download" 2>/dev/null || echo "0")
+echo "[FCM] OK: 下载完成, 大小: $FILE_SIZE 字节"
+
+if [ "$FILE_SIZE" -lt 100 ]; then
+    echo "[FCM] [错误] 文件过小 ($FILE_SIZE 字节), 可能下载失败"
+    rm -f "$TMP_FILE.download"
+    exit 1
+fi
+
+# [3] 构建
+echo "[FCM] [3/5] 构建 hosts 文件..."
+
+# Localhost 保护
+echo "127.0.0.1 localhost" > "$TMP_FILE"
+echo "::1 localhost ip6-localhost" >> "$TMP_FILE"
+echo "" >> "$TMP_FILE"
+echo "# --- FCM Optimized ---" >> "$TMP_FILE"
+echo "# Updated: $(date '+%Y-%m-%d %H:%M:%S')" >> "$TMP_FILE"
+echo "" >> "$TMP_FILE"
+
+# 追加下载内容
+cat "$TMP_FILE.download" >> "$TMP_FILE"
+
+LINES=$(wc -l < "$TMP_FILE")
+echo "[FCM] OK: 文件构建完成, 共 $LINES 行"
+
+# [4] 校验
+echo "[FCM] [4/5] 校验内容..."
+if ! grep -qi "google" "$TMP_FILE"; then
+    echo "[FCM] [错误] 校验失败, 未找到 'google' 关键字"
+    rm -f "$TMP_FILE" "$TMP_FILE.download"
+    exit 1
+fi
+echo "[FCM] OK: 校验通过"
+
+# [5] 部署
+echo "[FCM] [5/5] 部署文件..."
+
+chmod 644 "$TMP_FILE"
+if [ -f /system/etc/hosts ] && [ -x "$(command -v chcon)" ]; then
+    chcon --reference /system/etc/hosts "$TMP_FILE" 2>/dev/null || true
+fi
+
+if mv -f "$TMP_FILE" "$LOCAL_TARGET" 2>/dev/null; then
+    echo "[FCM] OK: 文件已更新"
+else
+    echo "[FCM] [错误] 文件替换失败"
+    rm -f "$TMP_FILE"
+    exit 1
+fi
+
+rm -f "$TMP_FILE.download"
+
+FINAL_LINES=$(wc -l < "$LOCAL_TARGET")
+echo "[FCM] ========================================"
+echo "[FCM] 完成! hosts 文件共 $FINAL_LINES 行"
+echo "[FCM] ========================================"

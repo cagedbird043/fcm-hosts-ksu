@@ -9,9 +9,8 @@ on:
       - "service.sh"
       - "module.prop"
       - "system/bin/**"
+      - "bin/**"
       - ".github/workflows/release.yml"
-      - "CHANGELOG.md"
-      - "README.md"
 
 permissions:
   contents: write
@@ -32,22 +31,21 @@ jobs:
           echo "ZIP_NAME=fcm-hosts-ksu-${BASE_VER}.zip" >> $GITHUB_ENV
           V_CODE=$(date +%Y%m%d%H)
           echo "V_CODE=$V_CODE" >> $GITHUB_ENV
-          echo "Updating module.prop files..."
+          echo "Updating module.prop..."
           sed -i "s/\${DISPLAY_VER}/$BASE_VER/" module.prop
           sed -i "s/\${V_CODE}/$V_CODE/" module.prop
-          sed -i "s/\${DISPLAY_VER}/$BASE_VER/" META-INF/com/google/android/module.prop
-          sed -i "s/\${V_CODE}/$V_CODE/" META-INF/com/google/android/module.prop
 
-      - name: Build module zip
+      - name: Build module zip (whitelist, preserve symlinks)
         run: |
           echo "BASE_VER: ${{ env.BASE_VER }}"
           echo "ZIP_NAME: ${{ env.ZIP_NAME }}"
-          zip -r "${{ env.ZIP_NAME }}" . \
-            -x "*.git*" \
-            ".github/*" \
-            "CHANGELOG.md" \
-            "*.md" \
-            "*.txt"
+          # -y: 保留符号链接本身，不跟随打包
+          zip -ry "${{ env.ZIP_NAME }}" \
+            module.prop \
+            customize.sh \
+            service.sh \
+            bin/fcm-update \
+            system/bin/fcm-update
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -60,7 +58,6 @@ jobs:
 
       - name: Update OTA
         run: |
-          # 更新 update.json 并 commit
           sed -i "s/\${DISPLAY_VER}/${{ env.BASE_VER }}/g" update.json
           sed -i "s/\${V_CODE}/${{ env.V_CODE }}/g" update.json
           git config user.name "github-actions[bot]"
