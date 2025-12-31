@@ -1,13 +1,20 @@
 #!/system/bin/sh
 set -e
 
-MODPATH="${0%/*}"
+# 使用 $MODPATH 环境变量（KSU 安装器传入），如果不存在则从脚本路径推导
+if [ -z "$MODPATH" ]; then
+    # 解析脚本真实路径（跟随软链接）
+    SCRIPT_PATH="$(cd "$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")" && pwd)"
+    MODPATH="${SCRIPT_PATH%/*}"
+fi
+
 WORKSPACE="/data/adb/fcm-hosts"
 
 ui_print "========================================"
 ui_print "FCM Hosts Optimizer - 安装程序 v1.0"
 ui_print "========================================"
 ui_print ""
+ui_print "   MODPATH: $MODPATH"
 
 # [1] 环境准备
 ui_print "[1/5] 准备安装环境..."
