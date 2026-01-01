@@ -1,14 +1,6 @@
 #!/system/bin/sh
+# 清理 MiceTimer 中的任务注册
+rm -f /data/adb/timers.d/fcm-hosts.toml
 
-# 定义要铲除的数据区
-DATA_DIR="/data/adb/fcm-hosts"
-
-# 1. 彻底删除持久化目录
-if [ -d "$DATA_DIR" ]; then
-    rm -rf "$DATA_DIR"
-fi
-
-# 2. 这里的 /system/etc/hosts 软链不需要手动删
-# Magisk/KSU 在卸载模块后，OverlayFS 会自动撤销挂载，系统会回滚到原版 hosts
-
-exit 0
+# 清理脚本，但保留 hosts 数据
+rm -rf /data/adb/fcm-hosts/bin
