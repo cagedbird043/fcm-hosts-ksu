@@ -1,5 +1,5 @@
-Description = "Sync FCM Hosts with EdgeOne every 6 hours"
+Description = "Sync FCM Hosts with EdgeOne every 1 hour"
 Exec = "/system/bin/fcm-update"
 OnBootSec = "5m"
-OnUnitActiveSec = "6h"
+OnUnitActiveSec = "1h"
 WakeLock = true

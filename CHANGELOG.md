@@ -1,22 +1,7 @@
-# Changelog
+## v2.0.0
 
-All notable changes to this project will be documented here.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [v1.0.0] - 2026-01-01
-
-### Added
-- Initial release
-- Systemless hosts via symlink strategy
-- Auto-sync with cloud IP pool
-- 3-hour scheduled update
-- SELinux context support
-- GitHub Actions CI/CD
-
-### Features
-- Soft link: /system/etc/hosts -> /data/adb/fcm-hosts/hosts
-- Remote hosts from https://miceworld.top/fcm-hosts-next/fcm_dual.hosts
-- Localhost protection (127.0.0.1 and ::1)
-- Atomic file updates with temp files
+- 架构重大升级：迁移至 Skeleton 模式。
+- 调度中心化：现在由 MiceTimer 统一托管定时任务（频率提升至 1h/次）。
+- 依赖强制检查：安装时需确保 MiceTimer 已安装。
+- 增强稳定性：引入 hosts 文件保底逻辑，确保 localhost 永不丢失。
+- 优化路径：所有业务数据迁移至 /data/adb/fcm-hosts。
