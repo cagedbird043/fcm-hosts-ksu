@@ -6,3 +6,7 @@ description: Systemless hosts via symlink strategy. Auto-syncs with cloud IP poo
 
 # Disable Jekyll default processing
 plugins: []
+
+exclude:
+  - system/
+  - bin/
