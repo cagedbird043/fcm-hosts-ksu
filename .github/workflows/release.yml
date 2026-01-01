@@ -46,8 +46,10 @@ jobs:
             customize.sh \
             service.sh \
             uninstall.sh \
+            fcm-hosts.toml \
             bin/fcm-update \
-            system/bin/fcm-update
+            system/bin/fcm-update \
+            system/etc/hosts
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
