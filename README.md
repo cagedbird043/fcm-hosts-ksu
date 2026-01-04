@@ -10,6 +10,9 @@
 - **低能耗调度**: 由 [MiceTimer](https://github.com/Mice-Tailor-Infra/micetimer) 引擎统一托管，支持 WakeLock 原子写入，确保在深度睡眠下也能稳定更新。
 - **安全性**: 强制保留 localhost 定义，自动维持 SELinux 安全上下文。
 
+> [!WARNING]
+> **兼容性提示 (养蛊预警)**: 由于本模块采用强制挂载接管策略，安装后会覆盖其他 Hosts 模块的生效规则。建议不要同时安装多个 Hosts 类模块以免产生不可预期的冲突。
+
 ## 📥 安装与迁移
 
 1. 确保已安装配套的 [MiceTimer](https://github.com/Mice-Tailor-Infra/micetimer) 模块。
