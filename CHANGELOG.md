@@ -1,14 +1,23 @@
 ## v3.0.0 (Pre-release)
 
-- **架构重构**: 采用“硬链接 + 原生挂载”策略。现在模块内的 `hosts` 与数据区共用 Inode，完全交给管理器的原生挂载逻辑处理，解决了在 Magisk/APatch 及非 OverlayFS 环境下的兼容性问题。
-- **动态性增强**: 即使是由管理器挂载，得益于 Inode 共享和原地写入 (`cat >`) 技术，hosts 更新依然实时生效。
-- **稳定性提升**: `service.sh` 仅作为挂载状态的最后一道“保底”，极大降低了对系统命名空间的侵入。
-- **清理逻辑**: 自动清理旧版本中可能残留的软链接冲突。
+### 🚀 新特性 / New Features
+- **自适应挂载架构 (Adaptive Mounting)**: 独创“硬链接 + 原生挂载”方案。完美适配 Magisk, APatch 与 KernelSU，彻底解决非 OverlayFS 环境下的挂载失效问题。
+- **诊断工具 (Diagnostic Tool)**: 新增 `fcm-test` 指令，一键自测 9 个 FCM 核心节点的连通性与 IP 解析状态。
+- **全量双语支持 (Bilingual)**: `service.sh`, `fcm-update` 及 `fcm-test` 全面支持中英双语日志和输出。
 
-### ⚠️ 迁移与兼容性说明 (Migration Guide)
+### 🛡️ 安全与权限 / Security & Permissions
+- **SELinux 深度修复**: 重新设计了安全上下文对齐逻辑。通过参考系统核心组件并强制对齐 `system_file` 标签，确保非 Root 用户（普通 App）拥有持久的 hosts 读取权限。
+- **自愈机制**: `service.sh` 现在会在开机时自动巡检并修正被元模块篡改的 Inode 或 SELinux 标签。
+
+### 🔧 优化与修复 / Improvements & Fixes
+- **CI 流程加固**: 修复了 GitHub Actions 的正则逻辑，解决了 `update.json` 中查询字符串堆叠（串串香）的严重错误。
+- **极速同步**: 优化 MiceTimer 配置，开机延迟缩短至 1 分钟，显著提升首次激活速度。
+- **打包精简**: 优化 ZIP 白名单，移除了冗余缓存并确保 `system/etc/hosts` 占位符正确打包。
+
+### ⚠️ 迁移指南 / Migration Guide
 1. **自动迁移**: 安装本版本时，脚本会自动尝试将旧版的挂载逻辑移除并重新建立硬链接。
-2. **手动检查**: 如果你之前使用了手动修改 `/system/etc/hosts` 的工具或模块，建议先关闭它们。
-3. **残留处理**: 安装后若发现 `hosts` 不生效，请尝试在管理器的模块列表中彻底删除本模块，重启后再重新安装。
+2. **验证状态**: 建议安装后重启，并运行 `fcm-test` 验证状态。
+3. **兼容性**: 本模块会由于“硬链接抢占”导致其他 Hosts 模块失效，请知悉。
 
 ## v2.1.2
 
