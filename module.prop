@@ -1,7 +1,7 @@
 id=fcm-hosts-optimizer
 name=FCM Hosts Optimizer
-version=v2.1.2
+version=v3.0.0
 versionCode=${V_CODE}
 author=cagedbird043
-description=Systemless hosts via Bind Mount strategy. Auto-syncs with cloud IP pool. Managed by MiceTimer.
+description=Adaptive Systemless hosts via Hard Link strategy. High compatibility with Magisk/APatch/KSU. Managed by MiceTimer.
 updateJson=https://miceworld.top/fcm-hosts-ksu/update.json

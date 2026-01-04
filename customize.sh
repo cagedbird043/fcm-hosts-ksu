@@ -24,12 +24,26 @@ if [ -d "$GENERIC_OVERLAY_CACHE" ]; then
     rm -rf "$GENERIC_OVERLAY_CACHE"
 fi
 
-# [Critical] 强制清理模块内的 system/etc/hosts
-# 防止覆盖安装时残留软链接，导致 service.sh 中的 bind mount 跟随链接失效
-if [ -d "$MODPATH/system/etc" ]; then
-    ui_print "- 清理旧版架构..."
-    rm -rf "$MODPATH/system/etc"
+# 1. 初始化 hosts 容器
+HOSTS_FILE="$DATA_DIR/hosts"
+if [ ! -f "$HOSTS_FILE" ]; then
+    ui_print "- 正在创建初始 hosts 文件..."
+    cat > "$HOSTS_FILE" <<EOF
+127.0.0.1       localhost
+::1             localhost
+EOF
+    chmod 644 "$HOSTS_FILE"
 fi
+
+# 2. 建立硬链接 (Hard Link)
+# 这一步是 v3.0 的核心：让主系统分区的文件指向数据区相同的 Inode。
+# 管理器 Native 挂载会处理各命名空间的可见性。
+MOD_SYSTEM_ETC="$MODPATH/system/etc"
+mkdir -p "$MOD_SYSTEM_ETC"
+ui_print "- 正在建立硬链接挂载点..."
+# 强制移除可能存在的旧文件/软链接，确保 ln -f 成功创建真正的硬链接
+rm -f "$MOD_SYSTEM_ETC/hosts"
+ln -f "$HOSTS_FILE" "$MOD_SYSTEM_ETC/hosts"
 
 # 1. 部署执行脚本到数据分区
 if [ -f "$MODPATH/bin/fcm-update" ]; then
@@ -46,24 +60,12 @@ if [ -f "$MODPATH/fcm-hosts.toml" ]; then
     mv -f "$MODPATH/fcm-hosts.toml" "$TIMER_DIR/fcm-hosts.toml"
 fi
 
-# 3. hosts 文件保底逻辑
-HOSTS_FILE="$DATA_DIR/hosts"
-if [ ! -f "$HOSTS_FILE" ]; then
-    ui_print "- 正在创建保底 hosts 文件..."
-    cat > "$HOSTS_FILE" <<EOF
-127.0.0.1       localhost
-::1             localhost
-127.0.0.1       ip6-localhost
-::1             ip6-localhost
-EOF
-    chmod 644 "$HOSTS_FILE"
-fi
-
-# 4. 设置安全上下文 (SELinux)
+# 5. 设置安全上下文 (SELinux)
 if [ -x "$(command -v chcon)" ]; then
     ui_print "- 设置安全上下文..."
     chcon --reference /system/etc/hosts "$BIN_DIR/fcm-update" 2>/dev/null || true
     chcon --reference /system/etc/hosts "$HOSTS_FILE" 2>/dev/null || true
+    chcon --reference /system/etc/hosts "$MOD_SYSTEM_ETC/hosts" 2>/dev/null || true
 fi
 
 ui_print "✅ 安装完成！任务已移交给 MiceTimer 托管。"

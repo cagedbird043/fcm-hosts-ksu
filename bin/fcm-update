@@ -8,13 +8,13 @@ UA="curl/7.80.0"
 
 # 1. 缓存穿透下载 (带时间戳)
 if ! curl -kfsSL -A "$UA" --connect-timeout 15 --retry 3 "${REMOTE_URL}?t=$(date +%s)" -o "$TMP_FILE.download"; then
-    echo "[FCM] Download failed."
+    echo "[FCM] Download failed. / 下载失败。"
     exit 1
 fi
 
 # 2. 内容合法性校验
 if ! grep -qi "google" "$TMP_FILE.download"; then
-    echo "[FCM] Validation failed: Google IPs not found."
+    echo "[FCM] Validation failed: Google IPs not found. / 校验失败：未找到有效 Google IP。"
     rm -f "$TMP_FILE.download"
     exit 1
 fi
@@ -40,4 +40,4 @@ fi
     rm -f "$TMP_FILE"
     rm -f "$TMP_FILE.download"
 
-echo "[FCM] Status: SUCCESS. System synced with EdgeOne."
+echo "[FCM] Status: SUCCESS. System synced with EdgeOne. / 状态：同步成功。"
