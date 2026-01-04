@@ -16,6 +16,14 @@ ui_print "- 正在初始化 FCM Hosts 工作空间..."
 mkdir -p "$BIN_DIR"
 mkdir -p "$TIMER_DIR"
 
+# [Critical] 清理 Metamodule 抽象层的残留缓存
+# 使用通用路径 /data/adb/metamodule/mnt/... 兼容所有元模块实现
+GENERIC_OVERLAY_CACHE="/data/adb/metamodule/mnt/fcm-hosts-optimizer/system/etc"
+if [ -d "$GENERIC_OVERLAY_CACHE" ]; then
+    ui_print "- [Fix] 清理元模块 Overlay 缓存..."
+    rm -rf "$GENERIC_OVERLAY_CACHE"
+fi
+
 # [Critical] 强制清理模块内的 system/etc/hosts
 # 防止覆盖安装时残留软链接，导致 service.sh 中的 bind mount 跟随链接失效
 if [ -d "$MODPATH/system/etc" ]; then

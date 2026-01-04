@@ -1,6 +1,6 @@
 id=fcm-hosts-optimizer
 name=FCM Hosts Optimizer
-version=v2.1.1
+version=v2.1.2
 versionCode=${V_CODE}
 author=cagedbird043
 description=Systemless hosts managed by MiceTimer. High-frequency sync via Mice-Tailor-Infra factory.

@@ -1,6 +1,10 @@
+## v2.1.2
+
+- **修复**: 增加对 Meta OverlayFS 模块缓存 (`/data/adb/modules/meta-overlayfs/...`) 的自动清理逻辑，解决因旧版软链接残留导致模块更新不生效的问题。
+
 ## v2.1.1
 
-- **修复**: 在安装脚本 (`customize.sh`) 中强制删除模块内的 `system/etc/hosts`，防止覆盖安装时软链接残留导致 Bind Mount 依然被重定向的问题。
+- **修复**: 在安装脚本 (`customize.sh`) 中强制删除模块内的 `system/etc/hosts` 目录，防止覆盖安装时软链接残留导致 Bind Mount 依然被重定向的问题。
 
 ## v2.1.0
 
