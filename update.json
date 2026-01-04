@@ -1,6 +1,6 @@
 {
-  "version": "v2.1.1",
-  "versionCode": "2026010401",
-  "zipUrl": "https://ghfast.top/https://github.com/Mice-Tailor-Infra/fcm-hosts-ksu/releases/download/v2.1.1/fcm-hosts-ksu-v2.1.1.zip",
-  "changelog": "https://miceworld.top/fcm-hosts-ksu/CHANGELOG.md?t=2026010417?t=2026010409?t=2026010408"
+  "version": "v3.0.0",
+  "versionCode": "${V_CODE}",
+  "zipUrl": "https://ghfast.top/https://github.com/Mice-Tailor-Infra/fcm-hosts-ksu/releases/download/v3.0.0/fcm-hosts-ksu-v3.0.0.zip",
+  "changelog": "https://miceworld.top/fcm-hosts-ksu/CHANGELOG.md"
 }

@@ -33,10 +33,10 @@ jobs:
           V_CODE=$(date +%Y%m%d%H)
           echo "V_CODE=$V_CODE" >> $GITHUB_ENV
           echo "Updating module.prop..."
-          sed -i "s/\${DISPLAY_VER}/$BASE_VER/" module.prop
-          sed -i "s/\${V_CODE}/$V_CODE/" module.prop
-          # Add timestamp to updateJson in module.prop to bust cache
-          sed -i "s|update.json|update.json?t=$V_CODE|" module.prop
+          sed -i "s|^\(version=\).*|\1$BASE_VER|" module.prop
+          sed -i "s|^\(versionCode=\).*|\1$V_CODE|" module.prop
+          # Add timestamp to updateJson in module.prop to bust cache, using a precise replacement to avoid duplication
+          sed -i "s|update.json\(\?t=[0-9]*\)\?|update.json?t=$V_CODE|g" module.prop
 
       - name: Extract Release Notes
         run: |
@@ -74,10 +74,11 @@ jobs:
 
       - name: Update OTA
         run: |
-          sed -i "s/\${DISPLAY_VER}/${{ env.BASE_VER }}/g" update.json
-          sed -i "s/\${V_CODE}/${{ env.V_CODE }}/g" update.json
+          sed -i "s|\"version\": \".*\"|\"version\": \"${{ env.BASE_VER }}\"|g" update.json
+          sed -i "s|\"versionCode\": \".*\"|\"versionCode\": \"${{ env.V_CODE }}\"|g" update.json
+          sed -i "s|v[0-9.]*/fcm-hosts-ksu-v[0-9.]*\.zip|${{ env.BASE_VER }}/fcm-hosts-ksu-${{ env.BASE_VER }}.zip|g" update.json
           # Add timestamp to changelog URL in update.json
-          sed -i "s|CHANGELOG.md|CHANGELOG.md?t=${{ env.V_CODE }}|g" update.json
+          sed -i "s|CHANGELOG.md\(\?t=[0-9]*\)\?|CHANGELOG.md?t=${{ env.V_CODE }}|g" update.json
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add update.json
