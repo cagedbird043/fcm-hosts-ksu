@@ -3,5 +3,5 @@ name=FCM Hosts Optimizer
 version=v2.1.2
 versionCode=${V_CODE}
 author=cagedbird043
-description=Systemless hosts managed by MiceTimer. High-frequency sync via Mice-Tailor-Infra factory.
+description=Systemless hosts via Bind Mount strategy. Auto-syncs with cloud IP pool. Managed by MiceTimer.
 updateJson=https://miceworld.top/fcm-hosts-ksu/update.json
