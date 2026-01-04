@@ -31,7 +31,8 @@ fi
 # 4. 安全对齐
 chmod 644 "$TMP_FILE"
 if [ -x "$(command -v chcon)" ]; then
-    chcon --reference /system/etc/hosts "$TMP_FILE" 2>/dev/null || true
+    # 使用 reference 对齐或硬编码 fallback，确保更新后依然可读
+    chcon --reference /system/bin/sh "$TMP_FILE" 2>/dev/null || chcon u:object_r:system_file:s0 "$TMP_FILE" 2>/dev/null || true
 fi
 
 # 5. 原地写入 (保持 Bind Mount 有效)

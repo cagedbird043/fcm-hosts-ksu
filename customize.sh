@@ -62,10 +62,12 @@ fi
 
 # 5. 设置安全上下文 (SELinux)
 if [ -x "$(command -v chcon)" ]; then
-    ui_print "- 设置安全上下文..."
-    chcon --reference /system/etc/hosts "$BIN_DIR/fcm-update" 2>/dev/null || true
-    chcon --reference /system/etc/hosts "$HOSTS_FILE" 2>/dev/null || true
-    chcon --reference /system/etc/hosts "$MOD_SYSTEM_ETC/hosts" 2>/dev/null || true
+    ui_print "- 设置安全上下文 (SELinux)..."
+    # 显式使用 system_file 标签，确保普通 App 在任何挂载方式下都有权读取
+    # 优先参考系统 bin 目录，因为它的标签几乎在所有 Android 版本上都是可读的
+    chcon --reference /system/bin/sh "$BIN_DIR/fcm-update" 2>/dev/null || chcon u:object_r:system_file:s0 "$BIN_DIR/fcm-update" 2>/dev/null || true
+    chcon --reference /system/bin/sh "$HOSTS_FILE" 2>/dev/null || chcon u:object_r:system_file:s0 "$HOSTS_FILE" 2>/dev/null || true
+    chcon --reference /system/bin/sh "$MOD_SYSTEM_ETC/hosts" 2>/dev/null || chcon u:object_r:system_file:s0 "$MOD_SYSTEM_ETC/hosts" 2>/dev/null || true
 fi
 
 ui_print "✅ 安装完成！任务已移交给 MiceTimer 托管。"
