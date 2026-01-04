@@ -26,3 +26,10 @@ else
         echo "[$(date)] FCM Hosts: ERROR - Failed to mount hosts. / 错误 - 挂载 hosts 失败。" >> /data/adb/fcm-hosts/service.log
     fi
 fi
+
+# 3. 强制修复 SELinux 上下文 (保底权限)
+# 防止某些元模块挂载后将标签重置为 adb_data_file
+if [ -x "$(command -v chcon)" ]; then
+    chcon --reference /system/bin/sh "$HOSTS_DATA" 2>/dev/null || chcon u:object_r:system_file:s0 "$HOSTS_DATA" 2>/dev/null || true
+    chcon --reference /system/bin/sh "$TARGET_HOSTS" 2>/dev/null || chcon u:object_r:system_file:s0 "$TARGET_HOSTS" 2>/dev/null || true
+fi
