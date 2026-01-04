@@ -1,8 +1,8 @@
 ## v2.1.0
 
-- **Fix**: Switch from Symlink to Bind Mount strategy to allow non-root apps to read hosts (bypassing `/data/adb` permissions).
-- **Fix**: Use in-place updates for hosts file to preserve mount point.
-- **Docs**: Translate README to Chinese.
+- **修复**: 切换为 Bind Mount (挂载) 策略，解决非 Root 应用因 `/data/adb` 权限无法读取 hosts 的问题。
+- **修复**: hosts 更新改为原地写入，防止挂载点失效。
+- **文档**: README 全面中文化。
 
 ## v2.0.0
 
