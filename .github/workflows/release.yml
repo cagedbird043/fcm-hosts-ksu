@@ -36,6 +36,17 @@ jobs:
           sed -i "s/\${DISPLAY_VER}/$BASE_VER/" module.prop
           sed -i "s/\${V_CODE}/$V_CODE/" module.prop
 
+      - name: Extract Release Notes
+        run: |
+          # Extract content between the current version header and the next header
+          # Assumes headers are like "## v1.0.0"
+          sed -n "/^## ${BASE_VER}/,/^## v/p" CHANGELOG.md | sed '1d;$d' > RELEASE_NOTES.md
+          # If empty (e.g. last version), try simplified extraction
+          if [ ! -s RELEASE_NOTES.md ]; then
+             sed -n "/^## ${BASE_VER}/,\$p" CHANGELOG.md | sed '1d' > RELEASE_NOTES.md
+          fi
+          cat RELEASE_NOTES.md
+
       - name: Build module zip (whitelist, preserve symlinks)
         run: |
           echo "BASE_VER: ${{ env.BASE_VER }}"
@@ -48,15 +59,14 @@ jobs:
             uninstall.sh \
             fcm-hosts.toml \
             bin/fcm-update \
-            system/bin/fcm-update \
-            system/etc/hosts
+            system/bin/fcm-update
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.BASE_VER }}
           files: ${{ env.ZIP_NAME }}
-          body_path: CHANGELOG.md
+          body_path: RELEASE_NOTES.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
